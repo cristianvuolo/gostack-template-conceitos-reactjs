@@ -1,31 +1,52 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 
 import "./styles.css";
+import api from "./services/api";
 
 function App() {
-  async function handleAddRepository() {
-    // TODO
-  }
+    const [repositories, setRepositories] = useState([]);
 
-  async function handleRemoveRepository(id) {
-    // TODO
-  }
+    useEffect(() => {
+        api.get('/repositories').then(response => {
+            setRepositories(response.data);
+        })
+    }, [])
 
-  return (
-    <div>
-      <ul data-testid="repository-list">
-        <li>
-          Repositório 1
+    async function handleAddRepository() {
+        const repository = await api.post('repositories', {
+            "title": "Desafio Node.js do app",
+            "url": "https://github.com/Rocketseat/bootcamp-gostack-desafios/tree/master/desafio-conceitos-nodejs",
+            "techs": [
+                "Node.js", "React", "React Native"
+            ]
+        });
+        setRepositories([...repositories, repository.data])
+    }
 
-          <button onClick={() => handleRemoveRepository(1)}>
-            Remover
-          </button>
-        </li>
-      </ul>
+    async function handleRemoveRepository(id) {
+        await api.delete(`/repositories/${id}`);
+        const arr = [...repositories];
+        arr.splice(repositories.findIndex(repo => id === repo.id), 1);
+        setRepositories(arr);
+    }
 
-      <button onClick={handleAddRepository}>Adicionar</button>
-    </div>
-  );
+    return (
+        <div>
+            <ul data-testid="repository-list">
+                {repositories.map(repository => (
+                    <li key={repository.id}>
+                        {repository.title}
+
+                        <button onClick={() => handleRemoveRepository(repository.id)}>
+                            Remover
+                        </button>
+                    </li>
+                ))}
+            </ul>
+
+            <button onClick={handleAddRepository}>Adicionar</button>
+        </div>
+    );
 }
 
 export default App;
